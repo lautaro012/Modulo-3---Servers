@@ -22,3 +22,60 @@ var beatles=[{
   profilePic:"http://cp91279.biography.com/BIO_Bio-Shorts_0_Ringo-Starr_SF_HD_768x432-16x9.jpg"
 }
 ]
+
+
+http.createServer(function(req, res) {
+  if (req.url === '/api') {
+    res.writeHead(200,{'Content-type' : 'application/json'});
+    return res.end(JSON.stringify(beatles));
+  }
+
+  if (req.url.substring(0,5) === '/api/') {
+    const beatle = req.url.split('/').pop();
+    const found = beatles.find(b => encodeURI(b.name).toLocaleLowerCase() === beatle.toLocaleLowerCase());
+    if(found) {
+      res.writeHead(200,{'Content-type' : 'application/json'});
+      return res.end(JSON.stringify(found));
+    }
+    res.writeHead(404,{'Content-type' : 'text/plain'});
+    return res.end(`${beatle} no es un Beatle`);
+  }
+
+
+  if(req.url === '/') {
+    fs.readFile('./index.html',function (err, data) {
+      if(err) {
+      res.writeHead(404,{'Content-type' : 'text/plain'});
+      return res.end('volve por donde llegaste');
+      }
+      res.writeHead(200,{'Content-type' : 'text/html'});
+      return res.end(data);
+    })
+  }
+
+
+  if(req.url.length > 1) {
+
+  const beatle = req.url.split('/').pop();
+  const found = beatles.find(b => encodeURI(b.name).toLocaleLowerCase() === beatle.toLocaleLowerCase());  
+    
+    
+  if(!found) {
+    res.writeHead(404,{'Content-type' : 'text/plain'});
+    return res.end('beatle no valido');
+  }
+   
+  fs.readFile('./beatle.html', 'utf-8', function (err, data) {
+    if(err) {
+      res.writeHead(404,{'Content-type' : 'text/plain'});
+      return res.end('volve por donde llegaste');
+    }
+    data = data.replace('{name}', found.name)
+              .replace('{birthday}', found.birthdate)
+              .replace('{profilepic}', found.profilePic);
+
+    res.writeHead(200,{'Content-type' : 'text/html'});
+    return res.end(data);
+    })
+  }
+}).listen(1337,'127.0.0.1')
